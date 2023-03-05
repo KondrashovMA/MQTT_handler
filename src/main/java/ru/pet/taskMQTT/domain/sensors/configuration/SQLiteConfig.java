@@ -9,7 +9,6 @@ import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-//import ru.pet.taskMQTT.domain.sensors.configuration.dialect.SQLDialect;
 import ru.pet.taskMQTT.domain.sensors.model.Sensor;
 
 import javax.sql.DataSource;

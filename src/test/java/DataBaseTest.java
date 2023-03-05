@@ -14,11 +14,14 @@ public class DataBaseTest {
     public void test(){
          var a = sensorsService.getAll();
         System.out.println(a.size());
+        a.forEach(System.out::println);
 
-        Sensor sensor = new Sensor();
-        sensor.setPath("Path1");
-        sensor.setDate("date");
-        sensor.setValue(3.0);
-        sensorsService.save(sensor);
+//        Sensor sensor = new Sensor();
+//        sensor.setPath("Path2");
+//        sensor.setDate("SomeDate");
+//        sensor.setValue(5.1);
+//        sensorsService.save(sensor);
      }
+
+
 }

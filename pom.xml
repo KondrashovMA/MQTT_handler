@@ -3,7 +3,6 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -29,10 +28,21 @@
 
     <dependency>
         <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-data-jpa</artifactId>
+        <artifactId>spring-boot-starter-web</artifactId>
         <version>2.7.3</version>
     </dependency>
 
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter</artifactId>
+        <version>2.7.3</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-jpa</artifactId>
+        <version>2.7.3</version>
+    </dependency>
 
     <dependency>
         <groupId>org.hibernate</groupId>
@@ -57,7 +67,11 @@
         <version>0.1.2</version>
     </dependency>
 
-
+    <dependency>
+        <groupId>org.springframework.integration</groupId>
+        <artifactId>spring-integration-mqtt</artifactId>
+        <version>6.0.3</version>
+    </dependency>
 
     <dependency>
         <groupId>org.eclipse.paho</groupId>
@@ -83,8 +97,18 @@
         <version>2.7.3</version>
         <scope>test</scope>
     </dependency>
-
-
 </dependencies>
+
+<build>
+    <finalName>auto-report-creation</finalName>
+    <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
+    <plugins>
+    <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>3.1.0</version>
+    </plugin>
+    </plugins>
+    </pluginManagement>
+</build>
 
 </project>
