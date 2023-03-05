@@ -5,12 +5,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
 
 @Data
 @Entity
 @Table(name = "sensors")
 @NoArgsConstructor
-@AllArgsConstructor
 public class Sensor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,8 +20,14 @@ public class Sensor {
     private String path;
 
     @Column
-    private Double value;
+    private String value;
 
     @Column
-    private String date;
+    private Timestamp date;
+
+    public Sensor(String path, String value, Timestamp timestamp) {
+        this.path = path;
+        this.value = value;
+        this.date = timestamp;
+    }
 }
