@@ -12,6 +12,7 @@ import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessagingException;
 import org.springframework.stereotype.Component;
 import ru.pet.taskMQTT.domain.sensors.model.Sensor;
+import ru.pet.taskMQTT.domain.sensors.model.SignalizationDto;
 import ru.pet.taskMQTT.domain.sensors.service.SensorsService;
 
 import java.sql.Timestamp;
@@ -29,6 +30,9 @@ public class SensorsSubscriber {
 
     @Autowired
     MqttGateway mqttGateway;
+
+    @Autowired
+    SignalizationJsonSerializer signalizationJsonSerializer;
 
     @Value("${topic.sensors.light}")
     private String topicSensorsLight;
@@ -57,7 +61,15 @@ public class SensorsSubscriber {
                     if(value != null){
                         if(value.doubleValue() > 800.0) {
                             log.info("Exceed lighting");
-                            mqttGateway.sendToMqtt("light", "/signalization/device/light");
+                            mqttGateway.sendToMqtt(signalizationJsonSerializer.serializeToJson(
+                                            new SignalizationDto(
+                                                    "device",
+                                                    "sensor",
+                                                    value,
+                                                    "degrees",
+                                                    1
+                                            )),
+                                    "/signalization/device");
                         }
                     }
                     log.info(message.getPayload().toString());
@@ -74,7 +86,7 @@ public class SensorsSubscriber {
                     if(value != null){
                         if(value.doubleValue() > 50.0) {
                             log.debug("Exceed temperature");
-                            mqttGateway.sendToMqtt("temperature", "/signalization/device/temperature");
+                            mqttGateway.sendToMqtt("temperature", "/signalization/device");
                         }
                     }
                     log.info(message.getPayload().toString());
@@ -89,7 +101,7 @@ public class SensorsSubscriber {
                     sensorsService.save(sensor);
                     if(message.getPayload().toString().equals("open")){
                         log.debug("Door opened");
-                        mqttGateway.sendToMqtt("door Open", "/signalization/device/doors");
+                        mqttGateway.sendToMqtt("door Open", "/signalization/device");
                     }
                     log.info(message.getPayload().toString());
                     return;

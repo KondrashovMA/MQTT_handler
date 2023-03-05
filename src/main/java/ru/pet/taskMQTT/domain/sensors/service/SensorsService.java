@@ -19,4 +19,8 @@ public class SensorsService {
     public List<Sensor> getAll(){
         return sensorsRepository.findAll();
     }
+
+    public int countSensorByPathAndValue(String path, String value){
+        return sensorsRepository.countSensorByPathAndValue(path, value);
+    }
 }

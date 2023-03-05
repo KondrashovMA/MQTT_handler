@@ -29,5 +29,11 @@ public class DataBaseTest {
         sensorsService.save(sensor1);
      }
 
+     @Test
+     public void count(){
+        int amount = sensorsService.countSensorByPathAndValue("sensors/light", "500");
+         System.out.println("amount = " + amount);
+     }
+
 
 }
