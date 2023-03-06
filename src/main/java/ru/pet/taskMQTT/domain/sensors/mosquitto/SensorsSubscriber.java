@@ -11,18 +11,21 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessagingException;
 import org.springframework.stereotype.Component;
+import ru.pet.taskMQTT.domain.sensors.model.DetectorDto;
 import ru.pet.taskMQTT.domain.sensors.model.Sensor;
 import ru.pet.taskMQTT.domain.sensors.model.SignalizationDto;
+import ru.pet.taskMQTT.domain.sensors.mosquitto.util.DetectorDeserializer;
+import ru.pet.taskMQTT.domain.sensors.mosquitto.util.SignalizationJsonSerializer;
 import ru.pet.taskMQTT.domain.sensors.service.SensorsService;
 
 import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.util.Map;
 
 @Component
 @ComponentScan("ru.pet.taskMQTT")
 @Slf4j
-//@AllArgsConstructor
 public class SensorsSubscriber {
 
     @Autowired
@@ -34,14 +37,14 @@ public class SensorsSubscriber {
     @Autowired
     SignalizationJsonSerializer signalizationJsonSerializer;
 
-    @Value("${topic.sensors.light}")
-    private String topicSensorsLight;
+    @Autowired
+    DetectorDeserializer detectorDeserializer;
 
-    @Value("${topic.sensors.temperature}")
-    private String topicSensorsTemperature;
+    @Value("${topic.sensors}")
+    private String topicSensors;
 
-    @Value("${topic.sensors.doors}")
-    private String topicSensorsDoors;
+    @Value("${topic.signalization}")
+    private String topicSignalization;
 
     @Bean
     @ServiceActivator(inputChannel = "mqttInputChannel")
@@ -50,73 +53,70 @@ public class SensorsSubscriber {
             @Override
             public void handleMessage(Message<?> message) throws MessagingException {
                 String topic = message.getHeaders().get(MqttHeaders.RECEIVED_TOPIC).toString();
+                if(topic.equals(topicSensors)) {
+                    DetectorDto detectorDto = detectorDeserializer.deserialize(message.getPayload().toString());
+                    if(detectorDto == null){
+                        return;
+                    }
 
-                if(topic.equals(topicSensorsLight)){
-                    Sensor sensor = new Sensor(message.getHeaders().get(
-                            MqttHeaders.RECEIVED_TOPIC).toString(),
-                            message.getPayload().toString(),
-                            new Timestamp(System.currentTimeMillis()));
-                    sensorsService.save(sensor);
-                    var value = parseNumber(message.getPayload().toString(), topicSensorsLight);
-                    if(value != null){
-                        if(value.doubleValue() > 800.0) {
-                            log.info("Exceed lighting");
-                            mqttGateway.sendToMqtt(signalizationJsonSerializer.serializeToJson(
-                                            new SignalizationDto(
-                                                    "device",
-                                                    "sensor",
-                                                    value,
-                                                    "degrees",
-                                                    1
-                                            )),
-                                    "/signalization/device");
+                    for (Map.Entry<String, String> entry : detectorDto.getSensorsValues().entrySet()) {
+                        if (entry.getKey().equals("light")) {
+                            var value = parseNumber(entry.getValue());
+                            if (value != null) {
+                                if (value.doubleValue() > 800.0) {
+                                    log.info("Exceed lighting");
+                                    sendMqtt(detectorDto.getDetecorName(),entry.getKey(), value, "lux",
+                                            sensorsService.countSensorByPathAndValue(detectorDto.getDetecorName()
+                                                    + "/" + entry.getKey(), value.toString()));
+                                }
+                            }
                         }
-                    }
-                    log.info(message.getPayload().toString());
-                    return;
-                }
-
-                if(topic.equals(topicSensorsTemperature)){
-                    Sensor sensor = new Sensor(message.getHeaders().get(
-                            MqttHeaders.RECEIVED_TOPIC).toString(),
-                            message.getPayload().toString(),
-                            new Timestamp(System.currentTimeMillis()));
-                    sensorsService.save(sensor);
-                    var value = parseNumber(message.getPayload().toString(), topicSensorsTemperature);
-                    if(value != null){
-                        if(value.doubleValue() > 50.0) {
-                            log.debug("Exceed temperature");
-                            mqttGateway.sendToMqtt("temperature", "/signalization/device");
+                        if (entry.getKey().equals("fire")) {
+                            var value = parseNumber(entry.getValue());
+                            if (value != null) {
+                                if (value.doubleValue() > 50) {
+                                    log.info("Exceed temperature");
+                                    sendMqtt(detectorDto.getDetecorName(), entry.getKey(), value,"degrees",
+                                            sensorsService.countSensorByPathAndValue(detectorDto.getDetecorName() +
+                                                    "/" + entry.getKey(), value.toString()));
+                                }
+                            }
                         }
-                    }
-                    log.info(message.getPayload().toString());
-                    return;
-                }
+                        if (entry.getKey().equals("door")) {
+                            if (entry.getValue().equals("open")) {
+                                log.info("Door opened");
+                                sendMqtt(detectorDto.getDetecorName(), entry.getKey(), entry.getValue(),"open/close",
+                                        sensorsService.countSensorByPathAndValue(detectorDto.getDetecorName() +
+                                                "/" + entry.getKey(), entry.getValue()));
+                            }
+                        }
 
-                if(topic.equals(topicSensorsDoors)){
-                    Sensor sensor = new Sensor(message.getHeaders().get(
-                            MqttHeaders.RECEIVED_TOPIC).toString(),
-                            message.getPayload().toString(),
-                            new Timestamp(System.currentTimeMillis()));
-                    sensorsService.save(sensor);
-                    if(message.getPayload().toString().equals("open")){
-                        log.debug("Door opened");
-                        mqttGateway.sendToMqtt("door Open", "/signalization/device");
+                        sensorsService.save(new Sensor(detectorDto.getDetecorName() + "/" + entry.getKey(),
+                                entry.getValue(), new Timestamp(System.currentTimeMillis())));
                     }
-                    log.info(message.getPayload().toString());
-                    return;
                 }
-
                 log.debug(message.getPayload().toString());
             }
         };
     }
 
-    private Number parseNumber(String value, String topc){
+    private void sendMqtt(String device, String sensor, Object value, String units, int repeated){
+        mqttGateway.sendToMqtt(signalizationJsonSerializer.serializeToJson(
+                        new SignalizationDto(
+                                device,
+                                sensor,
+                                value,
+                                units,
+                                repeated
+                        )),
+                topicSignalization);
+    }
+
+    private Number parseNumber(String value){
         try {
             return NumberFormat.getNumberInstance().parse(value);
         }catch (ParseException e){
-            log.warn("Error while parsing value: {} from topic: {}", value, topc);
+            log.warn("Error while parsing value: {}", value);
             return null;
         }
     }

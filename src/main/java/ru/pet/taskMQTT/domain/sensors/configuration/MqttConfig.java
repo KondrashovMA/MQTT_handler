@@ -31,20 +31,18 @@ public class MqttConfig {
     @Value("${mosquitto.url}")
     private String url;
 
-    @Value("${topic.sensors.light}")
-    private String topicSensorsLight;
+    @Value("${topic.sensors}")
+    private String topicSensors;
 
-    @Value("${topic.sensors.temperature}")
-    private String topicSensorsTemperature;
-
-    @Value("${topic.sensors.doors}")
-    private String topicSensorsDoors;
+    @Value("${topic.signalization}")
+    private String topicSignalization;
 
     @Bean
     public MqttPahoClientFactory mqttPahoClientFactory(){
         DefaultMqttPahoClientFactory factory = new DefaultMqttPahoClientFactory();
         MqttConnectOptions options = new MqttConnectOptions();
 
+        options.setHttpsHostnameVerificationEnabled(true);
         options.setServerURIs(new String[] {url});
         options.setUserName(mosquittoAdmin);
         options.setPassword(mosquittoPswd.toCharArray());
@@ -62,8 +60,7 @@ public class MqttConfig {
     @Bean
     public MessageProducer inbound() {
         MqttPahoMessageDrivenChannelAdapter adapter =
-                new MqttPahoMessageDrivenChannelAdapter(url, "testClient",
-                        topicSensorsLight, topicSensorsTemperature, topicSensorsDoors);
+                new MqttPahoMessageDrivenChannelAdapter(url, "Client", topicSensors);
         adapter.setCompletionTimeout(5000);
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(1);
@@ -79,10 +76,10 @@ public class MqttConfig {
     @Bean
     @ServiceActivator(inputChannel = "mqttOutboundChannel")
     public MessageHandler outBound(){
-        MqttPahoMessageHandler messageHandler = new MqttPahoMessageHandler("serverIut",
+        MqttPahoMessageHandler messageHandler = new MqttPahoMessageHandler("Server",
                 mqttPahoClientFactory());
         messageHandler.setAsync(true);
-        messageHandler.setDefaultTopic("#");
+        messageHandler.setDefaultTopic(topicSignalization);
         messageHandler.setDefaultQos(1);
         messageHandler.setDefaultRetained(true);
         return messageHandler;

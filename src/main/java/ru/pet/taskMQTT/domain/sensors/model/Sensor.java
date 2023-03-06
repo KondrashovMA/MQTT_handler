@@ -1,6 +1,5 @@
 package ru.pet.taskMQTT.domain.sensors.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

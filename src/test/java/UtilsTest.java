@@ -3,13 +3,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.pet.taskMQTT.TaskMQTTapp;
 import ru.pet.taskMQTT.domain.sensors.model.SignalizationDto;
-import ru.pet.taskMQTT.domain.sensors.mosquitto.SignalizationJsonSerializer;
+import ru.pet.taskMQTT.domain.sensors.mosquitto.util.DetectorDeserializer;
+import ru.pet.taskMQTT.domain.sensors.mosquitto.util.SignalizationJsonSerializer;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @SpringBootTest(classes = TaskMQTTapp.class)
 public class UtilsTest {
     @Autowired
     SignalizationJsonSerializer signalizationJsonSerializer;
+
+    @Autowired
+    DetectorDeserializer detectorDeserializer;
 
     @Test
     public void signalizationJsonTest(){
@@ -35,5 +39,16 @@ public class UtilsTest {
         result = signalizationJsonSerializer.serializeToJson(signalizationDto);
 
         assertThat(result).isEqualTo(resultJson);
+    }
+
+    @Test
+    public void testParseJson(){
+        String json = "{\"detecorName\":\"/room/device1\",\"sensorsValues\":{\"light\":500,\"fire\":300}}";
+        var res = detectorDeserializer.deserialize(json);
+        System.out.println(res);
+
+        json = "{\"detecorName\":\"/room/device1\",\"sensorsValues\":{\"light\":500,\"fire\":300,\"door\":\"open\"}}";
+        res = detectorDeserializer.deserialize(json);
+        System.out.println(res);
     }
 }

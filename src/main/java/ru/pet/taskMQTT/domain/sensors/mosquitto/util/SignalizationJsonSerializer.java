@@ -1,4 +1,4 @@
-package ru.pet.taskMQTT.domain.sensors.mosquitto;
+package ru.pet.taskMQTT.domain.sensors.mosquitto.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
