@@ -13,27 +13,15 @@ public class DataBaseTest {
     SensorsService sensorsService;
 
     @Test
-    public void test(){
-         var a = sensorsService.getAll();
-        System.out.println(a.size());
-        a.forEach(System.out::println);
-
-        Sensor sensor1 = new Sensor("1", "2", new Timestamp(System.currentTimeMillis()));
-
-//        Sensor sensor = new Sensor();
-//        sensor.setPath("Path2");
-//        sensor.setDate(new Timestamp(System.currentTimeMillis()));
-//        sensor.setValue("value");
-//        sensorsService.save(sensor);
-
-        sensorsService.save(sensor1);
+    public void saveTest(){
+//        Sensor sensor = new Sensor("1", "2", new Timestamp(System.currentTimeMillis()));
+        Sensor sensor = new Sensor("1", "2", new Timestamp(System.currentTimeMillis()).toString());
+        sensorsService.save(sensor);
      }
 
      @Test
-     public void count(){
+     public void countTest(){
         int amount = sensorsService.countSensorByPathAndValue("sensors/light", "500");
          System.out.println("amount = " + amount);
      }
-
-
 }

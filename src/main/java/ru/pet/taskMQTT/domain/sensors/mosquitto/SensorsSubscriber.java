@@ -21,6 +21,9 @@ import ru.pet.taskMQTT.domain.sensors.service.SensorsService;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.Date;
 import java.util.Map;
 
 @Component
@@ -46,6 +49,8 @@ public class SensorsSubscriber {
     @Value("${topic.signalization}")
     private String topicSignalization;
 
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
+
     @Bean
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public MessageHandler messageHandler(){
@@ -59,12 +64,13 @@ public class SensorsSubscriber {
                         return;
                     }
 
+                    // go through all sensors and check the trigger conditions
                     for (Map.Entry<String, String> entry : detectorDto.getSensorsValues().entrySet()) {
                         if (entry.getKey().equals("light")) {
                             var value = parseNumber(entry.getValue());
                             if (value != null) {
                                 if (value.doubleValue() > 800.0) {
-                                    log.info("Exceed lighting");
+                                    log.info("Exceed lighting in sensor: {}", entry.getKey());
                                     sendMqtt(detectorDto.getDetecorName(),entry.getKey(), value, "lux",
                                             sensorsService.countSensorByPathAndValue(detectorDto.getDetecorName()
                                                     + "/" + entry.getKey(), value.toString()));
@@ -75,7 +81,7 @@ public class SensorsSubscriber {
                             var value = parseNumber(entry.getValue());
                             if (value != null) {
                                 if (value.doubleValue() > 50) {
-                                    log.info("Exceed temperature");
+                                    log.info("Exceed temperature in sensor: {}", entry.getKey());
                                     sendMqtt(detectorDto.getDetecorName(), entry.getKey(), value,"degrees",
                                             sensorsService.countSensorByPathAndValue(detectorDto.getDetecorName() +
                                                     "/" + entry.getKey(), value.toString()));
@@ -84,7 +90,7 @@ public class SensorsSubscriber {
                         }
                         if (entry.getKey().equals("door")) {
                             if (entry.getValue().equals("open")) {
-                                log.info("Door opened");
+                                log.info("Door opened in sensor: {}", entry.getKey());
                                 sendMqtt(detectorDto.getDetecorName(), entry.getKey(), entry.getValue(),"open/close",
                                         sensorsService.countSensorByPathAndValue(detectorDto.getDetecorName() +
                                                 "/" + entry.getKey(), entry.getValue()));
@@ -92,7 +98,8 @@ public class SensorsSubscriber {
                         }
 
                         sensorsService.save(new Sensor(detectorDto.getDetecorName() + "/" + entry.getKey(),
-                                entry.getValue(), new Timestamp(System.currentTimeMillis())));
+//                                entry.getValue(), Timestamp.valueOf(String.valueOf(Instant.now()))));
+                                entry.getValue(), dateFormat.format(new Date())));
                     }
                 }
                 log.debug(message.getPayload().toString());

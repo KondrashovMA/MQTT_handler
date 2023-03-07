@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.sql.Timestamp;
 
 @Data
 @Entity
@@ -22,9 +21,9 @@ public class Sensor {
     private String value;
 
     @Column
-    private Timestamp date;
+    private String date;
 
-    public Sensor(String path, String value, Timestamp timestamp) {
+    public Sensor(String path, String value, String timestamp) {
         this.path = path;
         this.value = value;
         this.date = timestamp;
