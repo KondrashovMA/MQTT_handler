@@ -1,4 +1,4 @@
-package ru.pet.taskMQTT.domain.sensors.configuration;
+package ru.pet.taskMQTT.configuration;
 
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.springframework.beans.factory.annotation.Value;

@@ -1,4 +1,4 @@
-package ru.pet.taskMQTT.domain.sensors.configuration;
+package ru.pet.taskMQTT.configuration;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.DataSourceBuilder;
